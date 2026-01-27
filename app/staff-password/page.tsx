@@ -7,14 +7,12 @@ export default function StaffPasswordPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  // You can change this to any password you want
   const CORRECT_PASSWORD = 'noelleketo';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (password === CORRECT_PASSWORD) {
-      // Redirect to staff dashboard (or pending approvals)
       router.push('/staff-dashboard');
     } else {
       setError('Incorrect password. Please try again.');

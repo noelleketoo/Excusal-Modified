@@ -38,9 +38,13 @@ export default function EventsPage() {
 
     if (error) alert('Error adding event: ' + error.message);
     else {
+      const { data } = await supabase
+        .from('events')
+        .select('*')
+        .order('start_date', { ascending: true });
+      setEvents(data || []);
       setEventName('');
       setEventDate('');
-      router.refresh();
     }
   }
 
