@@ -133,11 +133,14 @@ export default function StaffDashboard() {
                     <div className="flex gap-3 mt-4">
                       <button
                         onClick={async () => {
-                          await supabase
+                          const { error } = await supabase
                             .from('excusals')
                             .update({ status: 'approved' })
                             .eq('id', item.id);
-                          router.refresh();
+                          if (!error) {
+                            // Remove from pending list immediately
+                            setExcusals((prev) => prev.filter((e) => e.id !== item.id));
+                          }
                         }}
                         className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-semibold shadow-sm"
                       >
@@ -146,11 +149,14 @@ export default function StaffDashboard() {
 
                       <button
                         onClick={async () => {
-                          await supabase
+                          const { error } = await supabase
                             .from('excusals')
                             .update({ status: 'denied' })
                             .eq('id', item.id);
-                          router.refresh();
+                          if (!error) {
+                            // Remove from pending list immediately
+                            setExcusals((prev) => prev.filter((e) => e.id !== item.id));
+                          }
                         }}
                         className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg font-semibold shadow-sm"
                       >

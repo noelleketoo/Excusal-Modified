@@ -29,18 +29,23 @@ export default function EventsPage() {
     e.preventDefault();
     if (!eventName || !eventDate) return alert('Please fill out both fields.');
 
-    const { error } = await supabase.from('events').insert([
+    const { data, error } = await supabase.from('events').insert([
       {
         name: eventName,
         start_date: eventDate,
       },
-    ]);
+    ]).select();
 
     if (error) alert('Error adding event: ' + error.message);
-    else {
+    else if (data && data.length > 0) {
+      // Add new event to local state and sort by date
+      setEvents((prev) =>
+        [...prev, data[0]].sort((a, b) =>
+          new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+        )
+      );
       setEventName('');
       setEventDate('');
-      router.refresh();
     }
   }
 
