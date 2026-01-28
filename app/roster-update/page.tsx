@@ -85,13 +85,6 @@ export default function RosterUpdatePage() {
             onChange={(e) => setEmail(e.target.value)}
             className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
           />
-          <input
-            type="text"
-            placeholder="Search cadets..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:w-64 px-4 py-2 mb-4 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
-          />
           <button
             type="submit"
             disabled={loading}
@@ -100,7 +93,13 @@ export default function RosterUpdatePage() {
             {loading ? 'Adding...' : 'Add'}
           </button>
         </form>
-
+        <input
+          type="text"
+          placeholder="Search cadets..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full md:w-64 px-4 py-2 mb-4 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+        />
         {/* Roster Table */}
         <h2 className="text-xl font-semibold text-blue-700 mb-4">
           Current Roster

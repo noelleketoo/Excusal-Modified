@@ -6,7 +6,11 @@ import { supabase } from '@/lib/supabaseClient';
 export default function StaffDashboard() {
   const [tab, setTab] = useState<'pending' | 'history'>('pending');
   const [excusals, setExcusals] = useState<any[]>([]);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [events, setEvents] = useState<any[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string>('');
   const router = useRouter();
+
 
   useEffect(() => {
     async function fetchData() {
@@ -16,23 +20,25 @@ export default function StaffDashboard() {
               .from('excusals')
               .select(`
                 id,
+                event_id,
                 reason,
                 submitted_at,
                 status,
                 cadets(name, email),
-                events(name)
+                events(id, name)
               `)
               .eq('status', 'pending')
           : supabase
               .from('excusals')
               .select(`
                 id,
+                event_id,
                 reason,
                 submitted_at,
                 status,
                 cadets(name, email),
-                events(name)
-              `)
+                events(id, name)
+              `)    
               .in('status', ['approved', 'denied'])
               .order('submitted_at', { ascending: false });
 
@@ -43,12 +49,34 @@ export default function StaffDashboard() {
 
     fetchData();
   }, [tab]);
+
+  useEffect(() => {
+    async function fetchEvents() {
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, name')
+        .order('name');
+      if (error) console.error(error);
+      else setEvents(data || []);
+    }
+    fetchEvents();
+  }, []);
+
   function exportToCSV() {
-    const headers = ['Cadet', 'Email', 'Event', 'Status', 'Reason', 'Date Submitted'];
-    const rows = excusals.map((item) => [
+    const filtered = excusals.filter(
+      (item) => item.events?.id === selectedEventId || item.event_id === selectedEventId
+    );
+
+    if (filtered.length === 0) {
+      alert('No excusals found for this event.');
+      return;
+    }
+
+    const eventName = events.find((e) => e.id === selectedEventId)?.name || 'event';
+    const headers = ['Cadet', 'Email', 'Status', 'Reason', 'Date Submitted'];
+    const rows = filtered.map((item) => [
       item.cadets?.name || '',
       item.cadets?.email || '',
-      item.events?.name || '',
       item.status,
       item.reason,
       new Date(item.submitted_at).toLocaleString(),
@@ -63,10 +91,13 @@ export default function StaffDashboard() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `excusals-${tab}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `excusals-${eventName}-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    setShowExportModal(false);
+    setSelectedEventId('');
   }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 text-gray-800">
       {/* Header */}
@@ -88,7 +119,7 @@ export default function StaffDashboard() {
             Manage Events
           </button>
           <button
-            onClick={exportToCSV}
+            onClick={() => setShowExportModal(true)}
             className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-sm"
           >
             Export CSV
@@ -242,6 +273,48 @@ export default function StaffDashboard() {
           </>
         )}
       </div>
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            <h2 className="text-xl font-bold text-blue-700 mb-4">Export Excusals</h2>
+            <p className="text-gray-600 mb-4">Select an event to export:</p>
+            
+            <select
+              value={selectedEventId}
+              onChange={(e) => setSelectedEventId(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none mb-6"
+            >
+              <option value="">-- Select Event --</option>
+              {events.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {event.name}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowExportModal(false);
+                  setSelectedEventId('');
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={exportToCSV}
+                disabled={!selectedEventId}
+                className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white font-semibold rounded-lg"
+              >
+                Export CSV
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
