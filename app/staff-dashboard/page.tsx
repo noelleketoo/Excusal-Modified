@@ -62,25 +62,47 @@ export default function StaffDashboard() {
     fetchEvents();
   }, []);
 
-  function exportToCSV() {
-    const filtered = excusals.filter(
-      (item) => item.events?.id === selectedEventId || item.event_id === selectedEventId
-    );
+  async function exportToCSV() {
+    // Fetch all cadets
+    const { data: allCadets, error: cadetsError } = await supabase
+      .from('cadets')
+      .select('id, name, email')
+      .order('name');
 
-    if (filtered.length === 0) {
-      alert('No excusals found for this event.');
+    if (cadetsError) {
+      alert('Error fetching cadets: ' + cadetsError.message);
       return;
     }
 
+    // Fetch excusals for the selected event
+    const { data: eventExcusals, error: excusalsError } = await supabase
+      .from('excusals')
+      .select('cadet_id, status')
+      .eq('event_id', selectedEventId);
+
+    if (excusalsError) {
+      alert('Error fetching excusals: ' + excusalsError.message);
+      return;
+    }
+
+    // Create a map of cadet_id -> status
+    const excusalMap = new Map();
+    eventExcusals?.forEach((ex) => {
+      excusalMap.set(ex.cadet_id, ex.status);
+    });
+
+    // Build rows for all cadets
     const eventName = events.find((e) => e.id === selectedEventId)?.name || 'event';
-    const headers = ['Cadet', 'Email', 'Status', 'Reason', 'Date Submitted'];
-    const rows = filtered.map((item) => [
-      item.cadets?.name || '',
-      item.cadets?.email || '',
-      item.status,
-      item.reason,
-      new Date(item.submitted_at).toLocaleString(),
-    ]);
+    const headers = ['Name', 'Email', 'Status'];
+    const rows = allCadets?.map((cadet) => {
+      const excusalStatus = excusalMap.get(cadet.id);
+      let status = 'Present';
+      if (excusalStatus === 'approved') status = 'Excused';
+      else if (excusalStatus === 'denied') status = 'Denied';
+      else if (excusalStatus === 'pending') status = 'Pending';
+      
+      return [cadet.name, cadet.email, status];
+    }) || [];
 
     const csvContent = [
       headers.join(','),
@@ -91,12 +113,13 @@ export default function StaffDashboard() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `excusals-${eventName}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `attendance-${eventName}-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     setShowExportModal(false);
     setSelectedEventId('');
   }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 text-gray-800">
