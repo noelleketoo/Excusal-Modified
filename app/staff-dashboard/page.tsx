@@ -43,7 +43,30 @@ export default function StaffDashboard() {
 
     fetchData();
   }, [tab]);
+  function exportToCSV() {
+    const headers = ['Cadet', 'Email', 'Event', 'Status', 'Reason', 'Date Submitted'];
+    const rows = excusals.map((item) => [
+      item.cadets?.name || '',
+      item.cadets?.email || '',
+      item.events?.name || '',
+      item.status,
+      item.reason,
+      new Date(item.submitted_at).toLocaleString(),
+    ]);
 
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `excusals-${tab}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 text-gray-800">
       {/* Header */}
@@ -63,6 +86,12 @@ export default function StaffDashboard() {
             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-sm"
           >
             Manage Events
+          </button>
+          <button
+            onClick={exportToCSV}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-sm"
+          >
+            Export CSV
           </button>
           <button
             onClick={() => router.push('/')}

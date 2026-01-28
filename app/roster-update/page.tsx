@@ -8,6 +8,7 @@ export default function RosterUpdatePage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
 
   // Fetch roster from Supabase
@@ -84,6 +85,13 @@ export default function RosterUpdatePage() {
             onChange={(e) => setEmail(e.target.value)}
             className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
           />
+          <input
+            type="text"
+            placeholder="Search cadets..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full md:w-64 px-4 py-2 mb-4 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+          />
           <button
             type="submit"
             disabled={loading}
@@ -110,7 +118,12 @@ export default function RosterUpdatePage() {
                 </tr>
               </thead>
               <tbody>
-                {cadets.map((cadet) => (
+                {cadets
+                  .filter((cadet) =>
+                    cadet.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    cadet.email?.toLowerCase().includes(searchTerm.toLowerCase())
+                  )
+                  .map((cadet) => (
                   <tr
                     key={cadet.id}
                     className="border-t hover:bg-blue-50 transition-colors"
