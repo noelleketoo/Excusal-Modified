@@ -7,7 +7,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 function ExcusalFormContent() {
   const [form, setForm] = useState({
     name: '',
-    event: '',
+    eventId: '',
+    eventName: '',
     reason: '',
     makeup: '',
     contact: '',
@@ -15,7 +16,9 @@ function ExcusalFormContent() {
     cpt: '',
     co: '',
   });
-  const [events, setEvents] = useState<{ id: string; name: string }[]>([]);
+  const [events, setEvents] = useState<{ id: string; name: string; start_date: string; type: string }[]>([]);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [selectedEventType, setSelectedEventType] = useState<'LLAB' | 'PT' | 'Other' | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -34,7 +37,7 @@ function ExcusalFormContent() {
     const fetchEvents = async () => {
       const { data, error } = await supabase
         .from('events')
-        .select('id, name, start_date')
+        .select('id, name, start_date, type')
         .eq('archived', false)
         .order('start_date', { ascending: true });
       if (error) console.error(error);
@@ -42,6 +45,13 @@ function ExcusalFormContent() {
     };
     fetchEvents();
   }, []);
+
+  // Handle event selection from modal
+  const handleEventSelect = (eventId: string, eventName: string) => {
+    setForm({ ...form, eventId, eventName });
+    setShowEventModal(false);
+    setSelectedEventType(null);
+  };
 
   const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -66,18 +76,9 @@ function ExcusalFormContent() {
       return;
     }
 
-    // Verify event (only non-archived)
-    const { data: event, error: eventError } = await supabase
-      .from('events')
-      .select('id')
-      .eq('archived', false)
-      .ilike('name', form.event.trim())
-      .single();
-
-    if (!event || eventError) {
-      console.error('Event lookup error:', eventError);
-      console.log('Searched for event name:', form.event);
-      alert(`Error: Event not found. Searched for: "${form.event}". Error: ${eventError?.message || 'Unknown'}`);
+    // Check if event is selected
+    if (!form.eventId) {
+      alert('Please select an event.');
       setLoading(false);
       return;
     }
@@ -86,7 +87,7 @@ function ExcusalFormContent() {
     const { error } = await supabase.from('excusals').insert([
       {
         cadet_id: cadet.id,
-        event_id: event.id,
+        event_id: form.eventId,
         reason: form.reason,
         makeup: form.makeup,
         contact: form.contact,
@@ -157,12 +158,11 @@ function ExcusalFormContent() {
             }}
           />
 
-          {/* Event dropdown */}
-          <select
-            name="event"
-            value={form.event}
-            onChange={handleChange}
-            className="absolute border border-gray-400 rounded bg-white/85 px-2 text-xs text-gray-900 focus:ring-2 focus:ring-blue-400"
+          {/* Event selection button */}
+          <button
+            type="button"
+            onClick={() => setShowEventModal(true)}
+            className="absolute border border-gray-400 rounded bg-white/85 px-2 text-xs text-gray-900 hover:bg-white focus:ring-2 focus:ring-blue-400 cursor-pointer"
             style={{
               top: '38%',
               left: '40%',
@@ -171,13 +171,8 @@ function ExcusalFormContent() {
               transform: 'translate(-50%, -50%)',
             }}
           >
-            <option value="">Select Event</option>
-            {events.map((ev) => (
-              <option key={ev.id} value={ev.name}>
-                {ev.name}
-              </option>
-            ))}
-          </select>
+            {form.eventName || 'Select Event'}
+          </button>
 
           {/* Reason */}
           <textarea
@@ -294,6 +289,94 @@ function ExcusalFormContent() {
           </div>
         </form>
       </div>
+
+      {/* Event Selection Modal */}
+      {showEventModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-2xl shadow-xl">
+            {!selectedEventType ? (
+              <>
+                <h2 className="text-2xl font-bold text-blue-700 mb-6">Select Event Type</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <button
+                    onClick={() => setSelectedEventType('LLAB')}
+                    className="p-6 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-lg shadow-md transition-all"
+                  >
+                    LLAB
+                  </button>
+                  <button
+                    onClick={() => setSelectedEventType('PT')}
+                    className="p-6 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg shadow-md transition-all"
+                  >
+                    PT
+                  </button>
+                  <button
+                    onClick={() => setSelectedEventType('Other')}
+                    className="p-6 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold text-lg shadow-md transition-all"
+                  >
+                    Other
+                  </button>
+                </div>
+                <button
+                  onClick={() => setShowEventModal(false)}
+                  className="mt-6 px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg w-full"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-blue-700">
+                    Select {selectedEventType} Date
+                  </h2>
+                  <button
+                    onClick={() => setSelectedEventType(null)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ← Back
+                  </button>
+                </div>
+                <div className="max-h-96 overflow-y-auto space-y-2">
+                  {events
+                    .filter((ev) => ev.type === selectedEventType)
+                    .map((ev) => (
+                      <button
+                        key={ev.id}
+                        onClick={() => handleEventSelect(ev.id, `${ev.type} - ${new Date(ev.start_date).toLocaleDateString()}`)}
+                        className="w-full p-4 bg-gray-50 hover:bg-blue-50 border border-gray-200 rounded-lg text-left transition-all"
+                      >
+                        <div className="font-semibold text-gray-900">{ev.name}</div>
+                        <div className="text-sm text-gray-600">
+                          {new Date(ev.start_date).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </div>
+                      </button>
+                    ))}
+                  {events.filter((ev) => ev.type === selectedEventType).length === 0 && (
+                    <p className="text-gray-500 text-center py-8">
+                      No {selectedEventType} events available
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedEventType(null);
+                    setShowEventModal(false);
+                  }}
+                  className="mt-6 px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg w-full"
+                >
+                  Cancel
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
