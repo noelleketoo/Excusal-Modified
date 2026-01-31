@@ -18,7 +18,7 @@ export default function Page() {
         {/* Buttons */}
         <div className="flex flex-col gap-5">
           <button
-            onClick={() => router.push('/excusal')}
+            onClick={() => router.push('/cadet-select')}
             className="w-full py-3 text-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"
           >
             I&apos;m a Cadet
@@ -28,7 +28,7 @@ export default function Page() {
             onClick={() => router.push('/staff-password')}
             className="w-full py-3 text-lg font-semibold text-blue-700 bg-white border-2 border-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
           >
-            I&apos;m Staff
+            I&apos;m Batallion Staff
           </button>
         </div>
       </div>

@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function ExcusalOverlayForm() {
   const [form, setForm] = useState({
@@ -19,6 +19,15 @@ export default function ExcusalOverlayForm() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Load cadet name from URL parameter
+  useEffect(() => {
+    const nameParam = searchParams.get('name');
+    if (nameParam) {
+      setForm((prev) => ({ ...prev, name: nameParam }));
+    }
+  }, [searchParams]);
 
   // Load events
   useEffect(() => {
@@ -115,8 +124,8 @@ export default function ExcusalOverlayForm() {
 
   // Main form
   return (
-    <div className="relative flex justify-center bg-gray-100 min-h-screen py-8">
-      <div className="relative w-full max-w-[650px] aspect-[8.5/11]">
+    <div className="relative flex justify-center bg-gray-100 min-h-screen py-8 overflow-x-auto">
+      <div className="relative w-full min-w-[650px] max-w-[650px] aspect-[8.5/11]">
         {/* Background PDF */}
         <Image
           src="/images/excusal_template.png"
@@ -133,7 +142,8 @@ export default function ExcusalOverlayForm() {
             placeholder="Cadet Name"
             value={form.name}
             onChange={handleChange}
-            className="absolute border border-gray-400 rounded bg-white/85 px-2 text-[0.7vw] text-gray-900 focus:ring-2 focus:ring-blue-400"
+            readOnly={!!searchParams.get('name')}
+            className="absolute border border-gray-400 rounded bg-white/85 px-2 text-xs text-gray-900 focus:ring-2 focus:ring-blue-400"
             style={{
               top: '66%',
               left: '67%',
@@ -148,7 +158,7 @@ export default function ExcusalOverlayForm() {
             name="event"
             value={form.event}
             onChange={handleChange}
-            className="absolute border border-gray-400 rounded bg-white/85 px-2 text-[0.7vw] text-gray-900 focus:ring-2 focus:ring-blue-400"
+            className="absolute border border-gray-400 rounded bg-white/85 px-2 text-xs text-gray-900 focus:ring-2 focus:ring-blue-400"
             style={{
               top: '38%',
               left: '40%',
@@ -171,7 +181,7 @@ export default function ExcusalOverlayForm() {
             placeholder="Reason for Excusal"
             value={form.reason}
             onChange={handleChange}
-            className="absolute border border-gray-400 rounded bg-white/85 px-2 text-[0.7vw] text-gray-900 focus:ring-2 focus:ring-blue-400"
+            className="absolute border border-gray-400 rounded bg-white/85 px-2 text-xs text-gray-900 focus:ring-2 focus:ring-blue-400"
             style={{
               top: '43%',
               left: '50%',
@@ -187,7 +197,7 @@ export default function ExcusalOverlayForm() {
             placeholder="Makeup Plan"
             value={form.makeup}
             onChange={handleChange}
-            className="absolute border border-gray-400 rounded bg-white/85 px-2 text-[0.7vw] text-gray-900 focus:ring-2 focus:ring-blue-400"
+            className="absolute border border-gray-400 rounded bg-white/85 px-2 text-xs text-gray-900 focus:ring-2 focus:ring-blue-400"
             style={{
               top: '50%',
               left: '50%',
@@ -203,7 +213,7 @@ export default function ExcusalOverlayForm() {
             placeholder="Contact Info"
             value={form.contact}
             onChange={handleChange}
-            className="absolute border border-gray-400 rounded bg-white/85 px-2 text-[0.7vw] text-gray-900 focus:ring-2 focus:ring-blue-400"
+            className="absolute border border-gray-400 rounded bg-white/85 px-2 text-xs text-gray-900 focus:ring-2 focus:ring-blue-400"
             style={{
               top: '57%',
               left: '50%',
@@ -219,7 +229,7 @@ export default function ExcusalOverlayForm() {
             placeholder="Date"
             value={form.date}
             onChange={handleChange}
-            className="absolute text-center border border-gray-400 rounded bg-white/85 text-[0.6vw] text-gray-900 focus:ring-1 focus:ring-blue-400"
+            className="absolute text-center border border-gray-400 rounded bg-white/85 text-[10px] text-gray-900 focus:ring-1 focus:ring-blue-400"
             style={{
               top: '15.5%',
               left: '72%',
@@ -235,7 +245,7 @@ export default function ExcusalOverlayForm() {
             placeholder="CPT"
             value={form.cpt}
             onChange={handleChange}
-            className="absolute text-center border border-gray-400 rounded bg-white/85 text-[0.6vw] text-gray-900 focus:ring-1 focus:ring-blue-400"
+            className="absolute text-center border border-gray-400 rounded bg-white/85 text-[10px] text-gray-900 focus:ring-1 focus:ring-blue-400"
             style={{
               top: '20.5%',
               left: '40.5%',
@@ -251,7 +261,7 @@ export default function ExcusalOverlayForm() {
             placeholder="CO"
             value={form.co}
             onChange={handleChange}
-            className="absolute text-center border border-gray-400 rounded bg-white/85 text-[0.6vw] text-gray-900 focus:ring-1 focus:ring-blue-400"
+            className="absolute text-center border border-gray-400 rounded bg-white/85 text-[10px] text-gray-900 focus:ring-1 focus:ring-blue-400"
             style={{
               top: '20.5%',
               left: '49%',
