@@ -66,10 +66,11 @@ function ExcusalFormContent() {
       return;
     }
 
-    // Verify event
+    // Verify event (only non-archived)
     const { data: event, error: eventError } = await supabase
       .from('events')
       .select('id')
+      .eq('archived', false)
       .ilike('name', form.event.trim())
       .single();
 
