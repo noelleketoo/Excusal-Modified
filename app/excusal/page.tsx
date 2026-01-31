@@ -1,10 +1,10 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function ExcusalOverlayForm() {
+function ExcusalFormContent() {
   const [form, setForm] = useState({
     name: '',
     event: '',
@@ -29,12 +29,13 @@ export default function ExcusalOverlayForm() {
     }
   }, [searchParams]);
 
-  // Load events
+  // Load events (only non-archived)
   useEffect(() => {
     const fetchEvents = async () => {
       const { data, error } = await supabase
         .from('events')
         .select('id, name, start_date')
+        .eq('archived', false)
         .order('start_date', { ascending: true });
       if (error) console.error(error);
       else setEvents(data || []);
@@ -291,5 +292,17 @@ export default function ExcusalOverlayForm() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function ExcusalOverlayForm() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-gray-600">Loading form...</div>
+      </div>
+    }>
+      <ExcusalFormContent />
+    </Suspense>
   );
 }

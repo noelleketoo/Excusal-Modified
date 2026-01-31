@@ -11,12 +11,13 @@ export default function EventsPage() {
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [attendance, setAttendance] = useState<any[]>([]);
 
-  // Fetch events
+  // Fetch events (only non-archived)
   useEffect(() => {
     async function loadEvents() {
       const { data, error } = await supabase
         .from('events')
         .select('*')
+        .eq('archived', false)
         .order('start_date', { ascending: true });
       if (error) console.error(error);
       else setEvents(data || []);
@@ -41,6 +42,7 @@ export default function EventsPage() {
       const { data } = await supabase
         .from('events')
         .select('*')
+        .eq('archived', false)
         .order('start_date', { ascending: true });
       setEvents(data || []);
       setEventName('');
@@ -48,13 +50,17 @@ export default function EventsPage() {
     }
   }
 
-  // Delete event
-  async function handleDeleteEvent(id: string) {
-    const confirmDelete = confirm('Are you sure you want to remove this event?');
-    if (!confirmDelete) return;
+  // Archive event (soft delete)
+  async function handleArchiveEvent(id: string) {
+    const confirmArchive = confirm('Archive this event? It will be hidden from the list but excusal history will be preserved.');
+    if (!confirmArchive) return;
 
-    const { error } = await supabase.from('events').delete().eq('id', id);
-    if (error) alert('Error deleting event: ' + error.message);
+    const { error } = await supabase
+      .from('events')
+      .update({ archived: true })
+      .eq('id', id);
+
+    if (error) alert('Error archiving event: ' + error.message);
     else setEvents(events.filter((e) => e.id !== id));
   }
 
@@ -183,10 +189,10 @@ export default function EventsPage() {
                     View Attendance
                   </button>
                   <button
-                    onClick={() => handleDeleteEvent(event.id)}
-                    className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg font-semibold shadow-sm"
+                    onClick={() => handleArchiveEvent(event.id)}
+                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg font-semibold shadow-sm"
                   >
-                    Delete
+                    Archive
                   </button>
                 </div>
               </div>
