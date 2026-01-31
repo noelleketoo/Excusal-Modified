@@ -75,7 +75,9 @@ function ExcusalFormContent() {
       .single();
 
     if (!event || eventError) {
-      alert('Error: Event not found.');
+      console.error('Event lookup error:', eventError);
+      console.log('Searched for event name:', form.event);
+      alert(`Error: Event not found. Searched for: "${form.event}". Error: ${eventError?.message || 'Unknown'}`);
       setLoading(false);
       return;
     }
