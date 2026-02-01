@@ -4,11 +4,14 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
 export default function StaffDashboard() {
-  const [tab, setTab] = useState<'pending' | 'history'>('pending');
+  const [tab, setTab] = useState<'pending' | 'history' | 'tracker'>('pending');
   const [excusals, setExcusals] = useState<any[]>([]);
   const [showExportModal, setShowExportModal] = useState(false);
   const [events, setEvents] = useState<any[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>('');
+  const [cadetStats, setCadetStats] = useState<{name: string; count: number}[]>([]);
+  const [resetDate, setResetDate] = useState<string | null>(null);
+  const [loadingTracker, setLoadingTracker] = useState(false);
   const router = useRouter();
 
 
@@ -61,6 +64,76 @@ export default function StaffDashboard() {
     }
     fetchEvents();
   }, []);
+
+  // Fetch tracker data when tracker tab is active
+  useEffect(() => {
+    if (tab !== 'tracker') return;
+
+    async function fetchTrackerData() {
+      setLoadingTracker(true);
+
+      // 1. Get the reset date
+      const { data: settings, error: settingsError } = await supabase
+        .from('tracker_settings')
+        .select('reset_date')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      let currentResetDate = '2000-01-01';
+      if (settingsError) {
+        // If table doesn't exist yet, use a default date
+        setResetDate('All time');
+      } else {
+        currentResetDate = settings?.reset_date || '2000-01-01';
+        setResetDate(new Date(currentResetDate).toLocaleDateString());
+      }
+
+      // 2. Get all cadets
+      const { data: cadets, error: cadetsError } = await supabase
+        .from('cadets')
+        .select('id, name');
+
+      if (cadetsError) {
+        console.error('Error fetching cadets:', cadetsError);
+        setLoadingTracker(false);
+        return;
+      }
+
+      // 3. Get approved AND denied excusals since reset date
+      const { data: excusalsData, error: excusalsError } = await supabase
+        .from('excusals')
+        .select('cadet_id')
+        .in('status', ['approved', 'denied'])
+        .gte('submitted_at', currentResetDate);
+
+      if (excusalsError) {
+        console.error('Error fetching excusals:', excusalsError);
+        setLoadingTracker(false);
+        return;
+      }
+
+      // 4. Count excusals per cadet
+      const countMap = new Map<string, number>();
+      excusalsData?.forEach((ex) => {
+        countMap.set(ex.cadet_id, (countMap.get(ex.cadet_id) || 0) + 1);
+      });
+
+      // 5. Build stats array with all cadets
+      const stats = cadets?.map((cadet) => ({
+        name: cadet.name,
+        count: countMap.get(cadet.id) || 0,
+      })) || [];
+
+      // Sort by count descending, then by name
+      stats.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+      setCadetStats(stats);
+      setLoadingTracker(false);
+    }
+
+    fetchTrackerData();
+  }, [tab]);
 
   async function exportToCSV() {
     // Fetch all cadets
@@ -120,6 +193,29 @@ export default function StaffDashboard() {
     setSelectedEventId('');
   }
 
+  async function handleResetTracker() {
+    const confirmReset = confirm(
+      'Are you sure you want to reset the tracker for a new semester? ' +
+      'This will reset all counts to zero. No data will be deleted.'
+    );
+
+    if (!confirmReset) return;
+
+    const { error } = await supabase
+      .from('tracker_settings')
+      .insert([{ reset_date: new Date().toISOString(), reset_by: 'staff' }]);
+
+    if (error) {
+      alert('Error resetting tracker: ' + error.message);
+      return;
+    }
+
+    // Refresh the tracker data
+    setTab('pending');
+    setTimeout(() => setTab('tracker'), 100);
+
+    alert('Tracker has been reset for the new semester!');
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 text-gray-800">
@@ -178,11 +274,21 @@ export default function StaffDashboard() {
         >
           Excusal History
         </button>
+        <button
+          onClick={() => setTab('tracker')}
+          className={`px-6 py-2 font-semibold rounded-t-lg border-b-4 ${
+            tab === 'tracker'
+              ? 'border-blue-600 text-blue-700'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Accountability Tracker
+        </button>
       </div>
 
       {/* Content */}
       <div className="p-6">
-        {tab === 'pending' ? (
+        {tab === 'pending' && (
           <>
             <h2 className="text-xl font-semibold mb-4 text-blue-700">
               Pending Excusals
@@ -279,7 +385,9 @@ export default function StaffDashboard() {
               </div>
             )}
           </>
-        ) : (
+        )}
+
+        {tab === 'history' && (
           <>
             <h2 className="text-xl font-semibold mb-4 text-blue-700">
               Excusal History
@@ -326,6 +434,109 @@ export default function StaffDashboard() {
                   </tbody>
                 </table>
               </div>
+            )}
+          </>
+        )}
+
+        {tab === 'tracker' && (
+          <>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl font-semibold text-blue-700">
+                  Accountability Tracker
+                </h2>
+                <p className="text-gray-500 text-sm">
+                  Counting excusals since: {resetDate || 'Loading...'}
+                </p>
+              </div>
+              <button
+                onClick={handleResetTracker}
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-sm"
+              >
+                Reset for New Semester
+              </button>
+            </div>
+
+            {loadingTracker ? (
+              <p className="text-gray-600 italic">Loading tracker data...</p>
+            ) : (
+              <>
+                {/* Top 10 Bar Chart */}
+                <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-100 mb-8">
+                  <h3 className="text-lg font-semibold text-blue-800 mb-4">
+                    Top 10 Cadets by Excusal Count
+                  </h3>
+                  {cadetStats.slice(0, 10).every(s => s.count === 0) ? (
+                    <p className="text-gray-500 italic">No excusals recorded since last reset.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {cadetStats.slice(0, 10).map((stat, index) => {
+                        const maxCount = cadetStats[0]?.count || 1;
+                        const percentage = maxCount > 0 ? (stat.count / maxCount) * 100 : 0;
+                        return (
+                          <div key={stat.name} className="flex items-center gap-3">
+                            <span className="w-6 text-gray-500 text-sm">{index + 1}.</span>
+                            <span className="w-40 truncate text-gray-800 font-medium">
+                              {stat.name}
+                            </span>
+                            <div className="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden">
+                              <div
+                                className="bg-blue-600 h-full rounded-full transition-all duration-300 flex items-center justify-end pr-2"
+                                style={{ width: `${Math.max(percentage, stat.count > 0 ? 10 : 0)}%` }}
+                              >
+                                {stat.count > 0 && (
+                                  <span className="text-white text-xs font-semibold">
+                                    {stat.count}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {stat.count === 0 && (
+                              <span className="text-gray-400 text-sm">0</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Full Cadet List Table */}
+                <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
+                  <h3 className="text-lg font-semibold text-blue-800 mb-4">
+                    All Cadets ({cadetStats.length})
+                  </h3>
+                  <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                    <table className="min-w-full border border-gray-200 rounded-lg">
+                      <thead className="bg-blue-100 sticky top-0">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-blue-800">Rank</th>
+                          <th className="px-4 py-2 text-left text-blue-800">Cadet Name</th>
+                          <th className="px-4 py-2 text-left text-blue-800">Excusal Count</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {cadetStats.map((stat, index) => (
+                          <tr
+                            key={stat.name}
+                            className={`border-t hover:bg-gray-50 transition-colors ${
+                              stat.count >= 3 ? 'bg-red-50' : ''
+                            }`}
+                          >
+                            <td className="px-4 py-2 text-gray-600">{index + 1}</td>
+                            <td className="px-4 py-2 font-medium text-gray-800">{stat.name}</td>
+                            <td className={`px-4 py-2 font-semibold ${
+                              stat.count >= 3 ? 'text-red-600' : 'text-gray-700'
+                            }`}>
+                              {stat.count}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
             )}
           </>
         )}
