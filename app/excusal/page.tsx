@@ -133,7 +133,7 @@ function ExcusalFormContent() {
       <div className="relative w-full min-w-[650px] max-w-[650px] aspect-[8.5/11]">
         {/* Background PDF */}
         <Image
-          src="/images/excusal_template.png"
+          src="/images/excusaltemp.png"
           alt="Excusal Form"
           fill
           className="rounded-lg shadow-md border object-contain pointer-events-none"
@@ -150,8 +150,8 @@ function ExcusalFormContent() {
             readOnly={!!searchParams.get('name')}
             className="absolute border border-gray-400 rounded bg-white/85 px-2 text-xs text-gray-900 focus:ring-2 focus:ring-blue-400"
             style={{
-              top: '66%',
-              left: '67%',
+              top: '68%',
+              left: '69%',
               width: '12%',
               height: '6%',
               transform: 'translate(-50%, -50%)',
@@ -164,7 +164,7 @@ function ExcusalFormContent() {
             onClick={() => setShowEventModal(true)}
             className="absolute border border-gray-400 rounded bg-white/85 px-2 text-xs text-gray-900 hover:bg-white focus:ring-2 focus:ring-blue-400 cursor-pointer"
             style={{
-              top: '38%',
+              top: '39%',
               left: '40%',
               width: '30%',
               height: '2%',
@@ -182,10 +182,10 @@ function ExcusalFormContent() {
             onChange={handleChange}
             className="absolute border border-gray-400 rounded bg-white/85 px-2 text-xs text-gray-900 focus:ring-2 focus:ring-blue-400"
             style={{
-              top: '43%',
+              top: '45.5%',
               left: '50%',
               width: '60%',
-              height: '5%',
+              height: '4%',
               transform: 'translate(-50%, -50%)',
             }}
           />
@@ -198,10 +198,10 @@ function ExcusalFormContent() {
             onChange={handleChange}
             className="absolute border border-gray-400 rounded bg-white/85 px-2 text-xs text-gray-900 focus:ring-2 focus:ring-blue-400"
             style={{
-              top: '50%',
+              top: '52%',
               left: '50%',
               width: '60%',
-              height: '5%',
+              height: '4%',
               transform: 'translate(-50%, -50%)',
             }}
           />
@@ -214,7 +214,7 @@ function ExcusalFormContent() {
             onChange={handleChange}
             className="absolute border border-gray-400 rounded bg-white/85 px-2 text-xs text-gray-900 focus:ring-2 focus:ring-blue-400"
             style={{
-              top: '57%',
+              top: '58%',
               left: '50%',
               width: '60%',
               height: '3%',
@@ -230,8 +230,8 @@ function ExcusalFormContent() {
             onChange={handleChange}
             className="absolute text-center border border-gray-400 rounded bg-white/85 text-[10px] text-gray-900 focus:ring-1 focus:ring-blue-400"
             style={{
-              top: '15.5%',
-              left: '72%',
+              top: '16%',
+              left: '75%',
               width: '15%',
               height: '2.5%',
               transform: 'translate(-50%, -50%)',
@@ -246,8 +246,8 @@ function ExcusalFormContent() {
             onChange={handleChange}
             className="absolute text-center border border-gray-400 rounded bg-white/85 text-[10px] text-gray-900 focus:ring-1 focus:ring-blue-400"
             style={{
-              top: '20.5%',
-              left: '40.5%',
+              top: '21%',
+              left: '41%',
               width: '4%',
               height: '2%',
               transform: 'translate(-50%, -50%)',
@@ -262,8 +262,8 @@ function ExcusalFormContent() {
             onChange={handleChange}
             className="absolute text-center border border-gray-400 rounded bg-white/85 text-[10px] text-gray-900 focus:ring-1 focus:ring-blue-400"
             style={{
-              top: '20.5%',
-              left: '49%',
+              top: '21%',
+              left: '50.5%',
               width: '3%',
               height: '2%',
               transform: 'translate(-50%, -50%)',
