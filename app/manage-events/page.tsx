@@ -98,6 +98,15 @@ export default function EventsPage() {
       };
     });
 
+    // 4️⃣ Sort: cadets with excusals (not attending) at top, then alphabetically
+    attendanceList.sort((a, b) => {
+      const aHasExcusal = a.status !== 'attending';
+      const bHasExcusal = b.status !== 'attending';
+      if (aHasExcusal && !bHasExcusal) return -1;
+      if (!aHasExcusal && bHasExcusal) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
     setAttendance(attendanceList);
   }
 
