@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Excusal Platform",
   description: "Excusal Platform",
+  openGraph: {
+    title: "Excusal Platform",
+    description: "Excusal Platform",
+    images: ["/images/paulrevere.png"],
+  },
 };
 
 export default function RootLayout({
