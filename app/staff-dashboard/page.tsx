@@ -216,10 +216,24 @@ export default function StaffDashboard() {
                     <div className="flex gap-3 mt-4">
                       <button
                         onClick={async () => {
+                          // Update status to approved
                           await supabase
                             .from('excusals')
                             .update({ status: 'approved' })
                             .eq('id', item.id);
+
+                          // Send approval email
+                          await fetch('/api/send-excusal-email', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              cadetEmail: item.cadets?.email,
+                              cadetName: item.cadets?.name,
+                              eventName: item.events?.name,
+                              status: 'approved',
+                            }),
+                          });
+
                           setExcusals(excusals.filter((e) => e.id !== item.id));
                         }}
                         className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-semibold shadow-sm"
@@ -229,10 +243,30 @@ export default function StaffDashboard() {
 
                       <button
                         onClick={async () => {
+                          const denialReason = prompt('Please provide a reason for denial (optional):');
+
+                          // Update status to denied with optional reason
                           await supabase
                             .from('excusals')
-                            .update({ status: 'denied' })
+                            .update({
+                              status: 'denied',
+                              denial_reason: denialReason || null
+                            })
                             .eq('id', item.id);
+
+                          // Send denial email
+                          await fetch('/api/send-excusal-email', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              cadetEmail: item.cadets?.email,
+                              cadetName: item.cadets?.name,
+                              eventName: item.events?.name,
+                              status: 'denied',
+                              denialReason: denialReason || undefined,
+                            }),
+                          });
+
                           setExcusals(excusals.filter((e) => e.id !== item.id));
                         }}
                         className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg font-semibold shadow-sm"

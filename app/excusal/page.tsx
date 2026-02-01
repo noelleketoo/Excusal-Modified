@@ -12,7 +12,7 @@ function ExcusalFormContent() {
     reason: '',
     makeup: '',
     contact: '',
-    date: '',
+    date: new Date().toLocaleDateString('en-US'),
     cpt: '',
     co: '',
   });
@@ -343,12 +343,12 @@ function ExcusalFormContent() {
                     .map((ev) => (
                       <button
                         key={ev.id}
-                        onClick={() => handleEventSelect(ev.id, `${ev.type} - ${new Date(ev.start_date).toLocaleDateString()}`)}
+                        onClick={() => handleEventSelect(ev.id, `${ev.type} - ${ev.start_date}`)}
                         className="w-full p-4 bg-gray-50 hover:bg-blue-50 border border-gray-200 rounded-lg text-left transition-all"
                       >
                         <div className="font-semibold text-gray-900">{ev.name}</div>
                         <div className="text-sm text-gray-600">
-                          {new Date(ev.start_date).toLocaleDateString('en-US', {
+                          {new Date(ev.start_date + 'T00:00:00').toLocaleDateString('en-US', {
                             weekday: 'long',
                             year: 'numeric',
                             month: 'long',

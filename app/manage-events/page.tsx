@@ -191,7 +191,7 @@ export default function EventsPage() {
                   {event.name}
                 </h3>
                 <p className="text-gray-600 text-sm mb-3">
-                  Date: {new Date(event.start_date).toLocaleDateString()}
+                  Date: {event.start_date}
                 </p>
                 <div className="flex gap-2">
                   <button
