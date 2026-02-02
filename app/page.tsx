@@ -28,7 +28,7 @@ export default function Page() {
             onClick={() => router.push('/staff-password')}
             className="w-full py-3 text-lg font-semibold text-blue-700 bg-white border-2 border-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
           >
-            I&apos;m Batallion Staff
+            I&apos;m Battalion Staff
           </button>
         </div>
       </div>

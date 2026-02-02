@@ -25,10 +25,11 @@ export default function StaffDashboard() {
                 id,
                 event_id,
                 reason,
+                makeup,
                 submitted_at,
                 status,
                 cadets(name, email),
-                events(id, name)
+                events(id, name, start_date)
               `)
               .eq('status', 'pending')
           : supabase
@@ -37,11 +38,12 @@ export default function StaffDashboard() {
                 id,
                 event_id,
                 reason,
+                makeup,
                 submitted_at,
                 status,
                 cadets(name, email),
-                events(id, name)
-              `)    
+                events(id, name, start_date)
+              `)
               .in('status', ['approved', 'denied'])
               .order('submitted_at', { ascending: false });
 
@@ -310,11 +312,20 @@ export default function StaffDashboard() {
                     <p className="text-gray-600 text-sm">
                       <span className="font-medium">Event:</span>{' '}
                       {item.events?.name || 'N/A'}
+                      {item.events?.start_date && (
+                        <span className="text-gray-500"> ({item.events.start_date})</span>
+                      )}
                     </p>
                     <p className="text-gray-600 text-sm">
                       <span className="font-medium">Reason:</span>{' '}
                       {item.reason}
                     </p>
+                    {item.makeup && (
+                      <p className="text-gray-600 text-sm">
+                        <span className="font-medium">Makeup Plan:</span>{' '}
+                        {item.makeup}
+                      </p>
+                    )}
                     <p className="text-gray-400 text-xs">
                       Submitted: {new Date(item.submitted_at).toLocaleString()}
                     </p>
@@ -415,7 +426,12 @@ export default function StaffDashboard() {
                         className="border-t hover:bg-gray-50 transition-colors"
                       >
                         <td className="px-4 py-2">{item.cadets?.name}</td>
-                        <td className="px-4 py-2">{item.events?.name}</td>
+                        <td className="px-4 py-2">
+                          {item.events?.name}
+                          {item.events?.start_date && (
+                            <span className="text-gray-500 text-sm"> ({item.events.start_date})</span>
+                          )}
+                        </td>
                         <td
                           className={`px-4 py-2 font-medium ${
                             item.status === 'approved'
