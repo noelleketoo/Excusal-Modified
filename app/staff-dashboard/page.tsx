@@ -340,16 +340,24 @@ export default function StaffDashboard() {
                             .eq('id', item.id);
 
                           // Send approval email
-                          await fetch('/api/send-excusal-email', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              cadetEmail: item.cadets?.email,
-                              cadetName: item.cadets?.name,
-                              eventName: item.events?.name,
-                              status: 'approved',
-                            }),
-                          });
+                          try {
+                            const emailRes = await fetch('/api/send-excusal-email', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                cadetEmail: item.cadets?.email,
+                                cadetName: item.cadets?.name,
+                                eventName: item.events?.name,
+                                eventDate: item.events?.start_date,
+                                status: 'approved',
+                              }),
+                            });
+                            if (!emailRes.ok) {
+                              console.error('Email failed:', await emailRes.text());
+                            }
+                          } catch (err) {
+                            console.error('Email error:', err);
+                          }
 
                           setExcusals(excusals.filter((e) => e.id !== item.id));
                         }}
@@ -372,17 +380,25 @@ export default function StaffDashboard() {
                             .eq('id', item.id);
 
                           // Send denial email
-                          await fetch('/api/send-excusal-email', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              cadetEmail: item.cadets?.email,
-                              cadetName: item.cadets?.name,
-                              eventName: item.events?.name,
-                              status: 'denied',
-                              denialReason: denialReason || undefined,
-                            }),
-                          });
+                          try {
+                            const emailRes = await fetch('/api/send-excusal-email', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                cadetEmail: item.cadets?.email,
+                                cadetName: item.cadets?.name,
+                                eventName: item.events?.name,
+                                eventDate: item.events?.start_date,
+                                status: 'denied',
+                                denialReason: denialReason || undefined,
+                              }),
+                            });
+                            if (!emailRes.ok) {
+                              console.error('Email failed:', await emailRes.text());
+                            }
+                          } catch (err) {
+                            console.error('Email error:', err);
+                          }
 
                           setExcusals(excusals.filter((e) => e.id !== item.id));
                         }}
