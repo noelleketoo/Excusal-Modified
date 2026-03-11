@@ -54,7 +54,8 @@ function ExcusalFormContent() {
   };
 
   const handleChange = (e: any) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: any) => {

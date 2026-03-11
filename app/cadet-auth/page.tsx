@@ -34,6 +34,8 @@ export default function CadetAuthPage() {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
+    console.log('Auth result:', { data, error });
+
     if (error) {
       setErrorMsg(error.message);
       setLoading(false);
@@ -41,11 +43,15 @@ export default function CadetAuthPage() {
     }
 
     const userEmail = data.user?.email ?? '';
-    const { data: cadet } = await supabase
+    console.log('Looking up email in cadets table:', userEmail);
+
+    const { data: cadet, error: cadetError } = await supabase
       .from('cadets')
       .select('name')
       .ilike('email', userEmail)
       .maybeSingle();
+
+    console.log('Cadet lookup result:', { cadet, cadetError });
 
     if (!cadet) {
       setErrorMsg('Your email is not registered as a cadet. Contact your cadre.');
